@@ -1,7 +1,8 @@
 #include <stdint.h>
-
+#include "mmu.h"
 #include "string.h"
 #include "console.h"
+#include "vm.h"
 #include "kalloc.h"
 
 void
@@ -23,12 +24,18 @@ main()
     check_free_list();
     void *p = kalloc();
     void *pgdir = kalloc();
+    cprintf("Allocator: Init success.\n");
     memset(pgdir,0,PGSIZE);
-    map_region(pgdir, 0, PGSIZE, V2P(p), 0);
+    void *va;
+    va = (void *)0;
+    map_region(pgdir, va, PGSIZE, V2P(p), 0);
+    cprintf("Allocator: Init success.\n");
     memset(p,0xAC,PGSIZE);
-    load_sp_el1(pgdir);
-    for (int i =0; i < PGSIZE; i++){
-        print(*((int *)i) == "0xAC");
+    cprintf("Allocator: Init success.\n");
+    asm volatile("msr ttbr0_el1, %[x]" :: [x]"r"(pgdir));
+    for (uint64_t i =0; i < 8; i++){
+        cprintf("Allocator: Init success.\n");
+        assert(*((char *)i) == 0xAC);
     }
-    while (1) ;
+    // while (1) ;
 }

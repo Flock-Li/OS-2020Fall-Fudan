@@ -21,21 +21,21 @@
  *     a pointer into the new page table page.
  */
 
-static uint64_t *
+uint64_t *
 pgdir_walk(uint64_t *pgdir, const void *va, int64_t alloc)
 {
     /* TODO: Your code here. */
     uint64_t *current_table = pgdir;
     uint64_t *entry = NULL;
     for (int i = 0; i < 4; i++){
-        offset = PTX(i, va);
+        uint64_t offset = PTX(i, va);
         entry = current_table + offset;
         if(!(*entry & PTE_P)){
             if(alloc == 0)
                 return NULL;
             char *page = kalloc();
             memset(page, 0, PGSIZE);
-            *entry = V2P(*page) | PTE_P | PTE_USER | PTE_RW;
+            *entry = V2P(page) |  PTE_USER | PTE_RW;
         }
         current_table =(uint64_t *) P2V(PTE_ADDR(*entry));
     }
@@ -50,24 +50,24 @@ pgdir_walk(uint64_t *pgdir, const void *va, int64_t alloc)
  *
  * Hint: call pgdir_walk to get the corresponding page table entry
  */
-
-static int
+int
 map_region(uint64_t *pgdir, void *va, uint64_t size, uint64_t pa, int64_t perm)
 {
     /* TODO: Your code here. */
-    uint64_t va_start = ROUNDDOWN(*va);
-    uint64_t va_end = ROUNDDOWN(*va + size -1);
+    uint64_t va_start = ROUNDDOWN((char *)va,PGSIZE);
+    uint64_t va_end = ROUNDDOWN((char *)va + size - 1,PGSIZE);
+    uint64_t pa_start = ROUNDDOWN(pa,PGSIZE);
     uint64_t *pte;
     for(;;){
-        if( (pte = pgdir_walk(pgdir, va, 1)) == 0 )
+        if( (pte = pgdir_walk(pgdir, (void *)va_start, 1)) == 0 )
             return -1;
         if( *pte & PTE_P )
             panic("remap");
-        *pte = P2V(pa) | perm | PTE_P | PTE_TABLE | PTE_AF;
+        *pte = pa_start | perm | PTE_P | PTE_TABLE | PTE_AF;
         if(va_start == va_end)
             break;
         va_start += PGSIZE;
-        pa += PGSIZE;
+        pa_start += PGSIZE;
     }
     return 0;
 }
@@ -75,7 +75,7 @@ map_region(uint64_t *pgdir, void *va, uint64_t size, uint64_t pa, int64_t perm)
 
 /* 
  * Free a page table.
- *
+ *P2V(pa)
  * Hint: You need to free all existing PTEs for this pgdir.
  */
 
@@ -86,9 +86,9 @@ vm_free(uint64_t *pgdir, int level)
     for(int i = 0; i < 512; i++){
         uint64_t pte = pgdir[i];
         if( pte & PTE_P ){
-            uint64_t *child = (uint64_t *) P2V(PTE_ADDR(*entry));
+            uint64_t *child = (uint64_t *) P2V(PTE_ADDR(pte));
             vm_free(child,level+1);
         }
     }
-    kfree(pgdir);
+    kfree((char*)pgdir);
 }
