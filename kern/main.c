@@ -36,8 +36,12 @@ main()
 
     lvbar(vectors);
     timer_init();
+<<<<<<< HEAD
 
     cprintf("CPU %d: Init success.\n", cpuid());
 
+=======
+    sti();
+>>>>>>> finish lab3
     while (1) ;
 }
