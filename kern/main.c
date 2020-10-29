@@ -24,18 +24,14 @@ main()
     check_free_list();
     void *p = kalloc();
     void *pgdir = kalloc();
-    cprintf("Allocator: Init success.\n");
     memset(pgdir,0,PGSIZE);
     void *va;
     va = (void *)0;
     map_region(pgdir, va, PGSIZE, V2P(p), 0);
-    cprintf("Allocator: Init success.\n");
     memset(p,0xAC,PGSIZE);
-    cprintf("Allocator: Init success.\n");
-    asm volatile("msr ttbr0_el1, %[x]" :: [x]"r"(pgdir));
-    for (uint64_t i =0; i < 8; i++){
-        cprintf("Allocator: Init success.\n");
-        assert(*((char *)i) == 0xAC);
-    }
+    // asm volatile("msr ttbr0_el1, %[x]" :: [x]"r"(pgdir));
+    // for (uint64_t i =0; i < 8; i++){
+    //     assert(*((char *)i) == 0xAC);
+    // }
     // while (1) ;
 }
