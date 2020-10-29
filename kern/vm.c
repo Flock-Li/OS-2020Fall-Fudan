@@ -35,7 +35,7 @@ pgdir_walk(uint64_t *pgdir, const void *va, int64_t alloc)
                 return NULL;
             char *page = kalloc();
             memset(page, 0, PGSIZE);
-            *entry = V2P(page) |  PTE_USER | PTE_RW;
+            *entry = V2P(page) | PTE_P |  PTE_USER | PTE_RW;
         }
         current_table =(uint64_t *) P2V(PTE_ADDR(*entry));
     }
@@ -61,8 +61,8 @@ map_region(uint64_t *pgdir, void *va, uint64_t size, uint64_t pa, int64_t perm)
     for(;;){
         if( (pte = pgdir_walk(pgdir, (void *)va_start, 1)) == 0 )
             return -1;
-        if( *pte & PTE_P )
-            panic("remap");
+        if( *pte & 2 )
+            panic("remap. this is a block");
         *pte = pa_start | perm | PTE_P | PTE_TABLE | PTE_AF;
         if(va_start == va_end)
             break;
@@ -83,12 +83,14 @@ void
 vm_free(uint64_t *pgdir, int level)
 {
     /* TODO: Your code here. */
-    for(int i = 0; i < 512; i++){
-        uint64_t pte = pgdir[i];
-        if( pte & PTE_P ){
-            uint64_t *child = (uint64_t *) P2V(PTE_ADDR(pte));
-            vm_free(child,level+1);
+    if(level != 4)
+        for(int i = 0; i < 512; i++){
+            uint64_t pte = pgdir[i];
+            if( pte & PTE_P ){
+                uint64_t *child = (uint64_t *) P2V(PTE_ADDR(*entry));
+                vm_free(child,level+1);
+            }
         }
-    }
-    kfree((char*)pgdir);
+    else
+        kfree(pgdir);
 }

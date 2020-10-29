@@ -29,9 +29,13 @@ main()
     va = (void *)0;
     map_region(pgdir, va, PGSIZE, V2P(p), 0);
     memset(p,0xAC,PGSIZE);
+<<<<<<< HEAD
     // asm volatile("msr ttbr0_el1, %[x]" :: [x]"r"(pgdir));
     // for (uint64_t i =0; i < 8; i++){
     //     assert(*((char *)i) == 0xAC);
     // }
     // while (1) ;
+=======
+    while (1) ;
+>>>>>>> 809ef08... Finish lab2
 }
