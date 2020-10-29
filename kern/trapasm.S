@@ -14,11 +14,7 @@ alltraps:
 
     /* TODO: Your code here. */
     /*PC寄存器和处理器状态PSTATE分别保存在寄存器ELR_EL1和SPSR_EL1,SP_EL0栈指针*/
-<<<<<<< HEAD
     sub sp, sp, #256
-=======
-    sub sp, sp, #240
->>>>>>> finish lab3
     stp	x0, x1, [sp, #16 * 0]
 	stp	x2, x3, [sp, #16 * 1]
 	stp	x4, x5, [sp, #16 * 2]
@@ -38,11 +34,7 @@ alltraps:
     mrs	x22, ELR_EL1
 	mrs	x23, SPSR_EL1
 	stp	x30, x21, [sp, #16 * 15] 
-<<<<<<< HEAD
-	stp	x22, x23, [sp, #16 * 16]
-=======
 	stp	x22, x23, [sp, #16 * 16] 
->>>>>>> finish lab3
 
     /*
      * Call trap(struct *trapframe).
@@ -51,11 +43,7 @@ alltraps:
 
     /* TODO: Your code here. */
     mov x0, sp
-<<<<<<< HEAD
-    b trap
-=======
     bl trap
->>>>>>> finish lab3
 
 /* Return falls through to trapret. */
 .global trapret
@@ -67,14 +55,11 @@ trapret:
      */
 
     /* TODO: Your code here. */
-<<<<<<< HEAD
-=======
 	stp	x22, x23, [sp, #16 * 16]
 	stp	x30, x21, [sp, #16 * 15] 
     msr	SP_EL0, x21
     msr	ELR_EL1, x22			
 	msr	SPSR_EL1, x23
->>>>>>> finish lab3
     ldp	x0, x1, [sp, #16 * 0]
 	ldp	x2, x3, [sp, #16 * 1]
 	ldp	x4, x5, [sp, #16 * 2]
@@ -90,14 +75,5 @@ trapret:
 	ldp	x24, x25, [sp, #16 * 12]
 	ldp	x26, x27, [sp, #16 * 13]
 	ldp	x28, x29, [sp, #16 * 14]
-<<<<<<< HEAD
-	stp	x30, x21, [sp, #16 * 15] 
-	stp	x22, x23, [sp, #16 * 16]
-    msr	SP_EL0, x21
-    msr	ELR_EL1, x22			
-	msr	SPSR_EL1, x23
 	add	sp, sp, #256
-=======
-	add	sp, sp, #240
->>>>>>> finish lab3
     eret

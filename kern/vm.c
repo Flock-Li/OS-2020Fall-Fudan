@@ -21,7 +21,7 @@
  *     a pointer into the new page table page.
  */
 
-static uint64_t *
+uint64_t *
 pgdir_walk(uint64_t *pgdir, const void *va, int64_t alloc)
 {
     uint64_t *current_table = pgdir;
@@ -51,7 +51,7 @@ pgdir_walk(uint64_t *pgdir, const void *va, int64_t alloc)
  * Hint: call pgdir_walk to get the corresponding page table entry
  */
 
-static int
+int
 map_region(uint64_t *pgdir, void *va, uint64_t size, uint64_t pa, int64_t perm)
 {
     /* TODO: Your code here. */
