@@ -87,7 +87,7 @@ vm_free(uint64_t *pgdir, int level)
         for(int i = 0; i < 512; i++){
             uint64_t pte = pgdir[i];
             if( pte & PTE_P ){
-                uint64_t *child = (uint64_t *) P2V(PTE_ADDR(*entry));
+                uint64_t *child = (uint64_t *) P2V(PTE_ADDR(pte));
                 vm_free(child,level+1);
             }
         }
