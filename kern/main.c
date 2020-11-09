@@ -8,6 +8,9 @@
 #include "timer.h"
 #include "spinlock.h"
 
+static struct spinlock conslock;
+static int cpu = -1;
+
 void
 main()
 {
@@ -23,16 +26,21 @@ main()
      * called once, and use lock to guarantee this.
      */
     /* TODO: Your code here. */
-
+    
+    acquire(&conslock);
+    if (cpu < 0){
+        cpu = cpuid();
+        memset(edata, 0, end - edata);    
+        /* TODO: Use `cprintf` to print "hello, world\n" */
+        console_init();
+        alloc_init();
+        cprintf("Allocator: Init success.\n");
+        check_free_list();
+        cprintf("finish check");
+        irq_init();
+    }
     /* TODO: Use `memset` to clear the BSS section of our program. */
-    memset(edata, 0, end - edata);    
-    /* TODO: Use `cprintf` to print "hello, world\n" */
-    console_init();
-    alloc_init();
-    cprintf("Allocator: Init success.\n");
-    check_free_list();
-
-    irq_init();
+    release(&conslock);
 
     lvbar(vectors);
     timer_init();
