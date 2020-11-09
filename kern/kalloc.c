@@ -19,6 +19,7 @@ struct run {
 
 struct {
     struct run *free_list; /* Free list of physical pages */
+    struct spinlock lock;
 } kmem;
 
 void
@@ -40,9 +41,12 @@ kfree(char *v)
     memset(v, 1, PGSIZE);
     
     /* TODO: Your code here. */
+    
     r = (struct run*)v;
+    acquire(&kmem.lock);
     r->next = kmem.free_list;
     kmem.free_list = r;
+    release(&kmem.lock);
 }
 
 void
@@ -64,11 +68,14 @@ kalloc()
 {
     /* TODO: Your code here. */
     struct run * r;
+    acquire(&kmem.lock);
     r = kmem.free_list;
     if(r){
         kmem.free_list = r->next;
-        memset((char *)r, 5, PGSIZE);
     }
+    release(&kmem.lock);
+    if (r)
+        memset((char *)r, 5, PGSIZE);
     return (void *)r;
 }
 
