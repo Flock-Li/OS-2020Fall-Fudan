@@ -11,8 +11,8 @@
 
 struct cpu cpus[NCPU];
 
-static struct spinlock conslock;
-static int cpu = -1;
+static struct spinlock conslock = {0,0,0};
+//static int cpu = -1;
 
 void
 main()
@@ -29,42 +29,33 @@ main()
      * called once, and use lock to guarantee this.
      */
     /* TODO: Your code here. */
-<<<<<<< HEAD
+    if(cpuid() == 0){
+        acquire(&conslock);
+        cprintf("main: [CPU%d] is init kernel\n", cpuid());
 
-    cprintf("main: [CPU%d] is init kernel\n", cpuid());
-
-    /* TODO: Use `memset` to clear the BSS section of our program. */
-    memset(edata, 0, end - edata);
-    console_init();
-    alloc_init();
-    cprintf("main: allocator init success.\n");
-    check_free_list();
-
-    irq_init();
-    proc_init();
-    user_init();
-=======
-    
-    acquire(&conslock);
-    if (cpu < 0){
-        cpu = cpuid();
-        memset(edata, 0, end - edata);    
-        /* TODO: Use `cprintf` to print "hello, world\n" */
+        /* TODO: Use `memset` to clear the BSS section of our program. */
+        memset(edata, 0, end - edata);
         console_init();
         alloc_init();
-        cprintf("Allocator: Init success.\n");
+        cprintf("main: allocator init success.\n");
         check_free_list();
-        cprintf("finish check");
+
         irq_init();
+        cprintf("--------\n");
+        proc_init();
+        cprintf("--------\n");
+        user_init();
+
+        cprintf("--------\n");
+        lvbar(vectors);
+        cprintf("--------\n");
+        timer_init();
+
+        cprintf("main: [CPU%d] Init success.\n", cpuid());
+        scheduler();
+        cprintf("--------\n");
+        while (1) ;
     }
-    /* TODO: Use `memset` to clear the BSS section of our program. */
-    release(&conslock);
->>>>>>> Finish lab4
-
-    lvbar(vectors);
-    timer_init();
-
-    cprintf("main: [CPU%d] Init success.\n", cpuid());
-    scheduler();
-    while (1) ;
+    
+       
 }

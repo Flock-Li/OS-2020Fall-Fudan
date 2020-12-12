@@ -9,3 +9,10 @@ sys_exit()
     exit();
     return 0;
 }
+
+int sys_yield()
+{
+    cprintf("sys_yield: in yield\n");
+    yield();
+    return 0;
+}

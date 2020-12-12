@@ -55,8 +55,8 @@ trapret:
      */
 
     /* TODO: Your code here. */
-	stp	x22, x23, [sp, #16 * 16]
-	stp	x30, x21, [sp, #16 * 15] 
+	ldp	x22, x23, [sp, #16 * 16]
+	ldp	x30, x21, [sp, #16 * 15] 
     msr	SP_EL0, x21
     msr	ELR_EL1, x22			
 	msr	SPSR_EL1, x23

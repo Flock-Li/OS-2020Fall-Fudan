@@ -112,6 +112,15 @@ argstr(int n, char **pp)
 
 extern int sys_exec();
 extern int sys_exit();
+extern int sys_yield();
+
+#define SYS_exec 0
+#define SYS_exit 1
+
+static int (*syscalls[])(void) = {
+        [SYS_exit]    sys_exit,
+        [SYS_exec]    sys_exec,
+};
 
 /* 
  * in ARM, parameters to main (argc, argv) are passed in r0 and r1
@@ -136,5 +145,17 @@ syscall()
      * }
      */
     /* TODO: Your code here. */
+    int num = proc->tf->r0;
+    int ret;
+    switch(num){
+        case SYS_exec:
+            break;
+        case SYS_exit:
+            ret = syscalls[num]();
+            proc->tf->r0 = ret;
+            return ret;
+        default:
+            break;
+    }
     return 0;
 }

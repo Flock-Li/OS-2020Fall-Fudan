@@ -37,6 +37,14 @@ trap(struct trapframe *tf)
             lesr(0);  /* Clear esr. */
             /* Jump to syscall to handle the system call from user process */
             /* TODO: Your code here. */
+            if(proc->killed)
+                exit();
+            return;
+            proc->tf = tf;
+            syscall();
+            if(proc->killed)
+                exit();
+            return;
             break;
         default:
 bad:

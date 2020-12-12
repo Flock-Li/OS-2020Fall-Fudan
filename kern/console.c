@@ -100,6 +100,7 @@ cprintf(const char *fmt, ...)
     acquire(&conslock);
     if (panicked >= 0 && panicked != cpuid()) {
         release(&conslock);
+        cprintf("panicked < -1");
         while (1) ;
     }
     va_start(ap, fmt);

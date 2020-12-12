@@ -82,11 +82,14 @@ kalloc()
 void
 check_free_list()
 {
+    //int cnt = 0;
     struct run *p;
     if (!kmem.free_list)
         panic("kmem.free_list is a null pointer!\n");
 
     for (p = kmem.free_list; p; p = p->next) {
+        //cnt += 1;
+        //cprintf("%d\n", cnt);
         assert((void *)p > (void *)end);
     }
 }
