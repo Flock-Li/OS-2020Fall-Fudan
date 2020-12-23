@@ -8,7 +8,6 @@
 #include "timer.h"
 #include "spinlock.h"
 
-static int ex = -1;
 static struct spinlock lk = {0, "main", 0};
 #include "proc.h"
 

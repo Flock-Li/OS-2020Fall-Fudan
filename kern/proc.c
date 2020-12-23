@@ -246,7 +246,6 @@ exit()
             if(pp->state == ZOMBIE){
                 wakeup(initproc);
             }
-            
         }
     }
     
