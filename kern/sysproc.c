@@ -10,7 +10,7 @@ sys_exit()
     return 0;
 }
 
-int 
+int
 sys_yield()
 {
     cprintf("sys_yield: in yield\n");

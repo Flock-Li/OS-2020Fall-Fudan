@@ -175,7 +175,6 @@ scheduler()
 /*
  * Enter scheduler.  Must hold only ptable.lock
  */
-
 void
 sched()
 {

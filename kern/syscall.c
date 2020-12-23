@@ -137,8 +137,8 @@ syscall()
      * }
      */
     /* TODO: Your code here. */
-    int num = proc->tf->x0;
-    switch(num){
+    uint64_t num = thiscpu->proc->tf->x0;
+    switch (num) {
         case SYS_exec:
             return sys_exec();
         case SYS_exit:
