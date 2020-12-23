@@ -5,46 +5,20 @@
 
 struct trapframe {
     /* TODO: Design your own trapframe layout here. */
-    uint64_t SPSR;
-    uint64_t SP;
-    uint64_t PC;
-    uint64_t    r0;
-    uint64_t    r1;
-    uint64_t    r2;
-    uint64_t    r3;
-    uint64_t    r4;
-    uint64_t    r5;
-    uint64_t    r6;
-    uint64_t    r7;
-    uint64_t    r8;
-    uint64_t    r9;
-    uint64_t    r10;
-    uint64_t    r11;
-    uint64_t    r12;
-    uint64_t    r13;
-    uint64_t    r14;
-    uint64_t    r15;
-    uint64_t    r16;
-    uint64_t    r17;
-    uint64_t    r18;
-    uint64_t    r19;
-    uint64_t    r20;
-    uint64_t    r21;
-    uint64_t    r22;
-    uint64_t    r23;
-    uint64_t    r24;
-    uint64_t    r25;
-    uint64_t    r26;
-    uint64_t    r27;
-    uint64_t    r28;
-    uint64_t    r29;
-    uint64_t    r30;
+    uint64_t sp;
+    uint64_t pc;
+    uint64_t pstate;
+    uint64_t x0, x1, x2, x3, x4;
+    uint64_t x5, x6, x7, x8, x9;
+    uint64_t x10, x11, x12, x13, x14;
+    uint64_t x15, x16, x17, x18, x19;
+    uint64_t x20, x21, x22, x23, x24;
+    uint64_t x25, x26, x27, x28, x29;
+    uint64_t x30;
 };
 
 void trap(struct trapframe *);
 void irq_init();
 void irq_error();
-
-#define DIS_INT     0x80
 
 #endif

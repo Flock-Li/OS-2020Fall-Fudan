@@ -63,7 +63,7 @@ argint(int n, uint64_t *ip)
 
     struct proc *proc = thiscpu->proc;
 
-    *ip = *(&proc->tf->r1 + n);
+    *ip = *(&proc->tf->x1 + n);
 
     return 0;
 }
@@ -114,14 +114,6 @@ extern int sys_exec();
 extern int sys_exit();
 extern int sys_yield();
 
-#define SYS_exec 0
-#define SYS_exit 1
-
-static int (*syscalls[])(void) = {
-        [SYS_exit]    sys_exit,
-        [SYS_exec]    sys_exec,
-};
-
 /* 
  * in ARM, parameters to main (argc, argv) are passed in r0 and r1
  * do not set the return value if it is SYS_exec (the user program
@@ -145,17 +137,14 @@ syscall()
      * }
      */
     /* TODO: Your code here. */
-    int num = proc->tf->r0;
-    int ret;
+    int num = proc->tf->x0;
     switch(num){
         case SYS_exec:
-            break;
+            return sys_exec();
         case SYS_exit:
-            ret = syscalls[num]();
-            proc->tf->r0 = ret;
-            return ret;
+            return sys_exit();
         default:
-            break;
+            panic("syscall: unknown syscall %d\n", num);
     }
     return 0;
 }

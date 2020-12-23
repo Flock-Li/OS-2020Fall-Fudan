@@ -7,12 +7,12 @@
 #include "trap.h"
 #include "timer.h"
 #include "spinlock.h"
+
+static int ex = -1;
+static struct spinlock lk = {0, "main", 0};
 #include "proc.h"
 
 struct cpu cpus[NCPU];
-
-static struct spinlock conslock = {0,0,0};
-//static int cpu = -1;
 
 void
 main()
@@ -23,17 +23,20 @@ main()
      */
 
     extern char edata[], end[], vectors[];
-
+    static int first = -1;
+    acquire(&lk);
+    if(first == -1) first = cpuid();
     /*
      * Determine which functions in main can only be
      * called once, and use lock to guarantee this.
      */
     /* TODO: Your code here. */
-    if(cpuid() == 0){
-        acquire(&conslock);
-        cprintf("main: [CPU%d] is init kernel\n", cpuid());
 
-        /* TODO: Use `memset` to clear the BSS section of our program. */
+    cprintf("main: [CPU%d] is init kernel\n", cpuid());
+
+    /* TODO: Use `memset` to clear the BSS section of our program. */
+    if(first == cpuid())
+    {
         memset(edata, 0, end - edata);
         console_init();
         alloc_init();
@@ -41,21 +44,15 @@ main()
         check_free_list();
 
         irq_init();
-        cprintf("--------\n");
         proc_init();
-        cprintf("--------\n");
         user_init();
-
-        cprintf("--------\n");
-        lvbar(vectors);
-        cprintf("--------\n");
-        timer_init();
-
-        cprintf("main: [CPU%d] Init success.\n", cpuid());
-        scheduler();
-        cprintf("--------\n");
-        while (1) ;
     }
-    
-       
+    release(&lk);
+
+    lvbar(vectors);
+    timer_init();
+
+    cprintf("main: [CPU%d] Init success.\n", cpuid());
+    scheduler();
+    while (1) ;
 }

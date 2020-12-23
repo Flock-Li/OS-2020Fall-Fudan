@@ -24,25 +24,25 @@ extern uint64_t *kpgdir;
  *     a pointer into the new page table page.
  */
 
-uint64_t *
+/*static */uint64_t *
 pgdir_walk(uint64_t *pgdir, const void *va, int64_t alloc)
-{
-    uint64_t *current_table = pgdir;
-    uint64_t *entry = NULL;
-    for (int i = 0; i < 4; i++){
-        uint64_t offset = PTX(i, va);
-        entry = current_table + offset;
-        if(!(*entry & PTE_P)){
-            if(alloc == 0)
-                return NULL;
-            char *page = kalloc();
-            memset(page, 0, PGSIZE);
-            *entry = V2P(page) |  PTE_USER | PTE_RW;
-        }
-        current_table =(uint64_t *) P2V(PTE_ADDR(*entry));
-    }
-    return entry;
+{  //pgdir point to the start entry of given page table
     /* TODO: Your code here. */
+    if((uint64_t)va >= (1L << 50)) panic("virtual memory limit exceed");
+    uint64_t *pg = pgdir;
+    for(int level = 0; level < 3; level++) {
+        uint64_t *pte = &pg[PTX(level, va)]; // pte point to target entry in this page table
+        if(*pte & PTE_P) { // check valid
+            pg = (uint64_t*) P2V(PTE_ADDR(*pte));
+        }
+        else {
+            if(alloc == 0 || (pg = (uint64_t*)kalloc()) == 0) return NULL; // not allowed to alloc or fail to alloc
+            memset(pg, 0, PGSIZE); // init the new page
+            *pte = V2P(pg) | PTE_TABLE | PTE_P | PTE_AF | PTE_NORMAL;
+        }
+    }
+    return &pg[PTX(3, va)];
+    /* My code ends. */
 }
 
 /*
@@ -54,37 +54,19 @@ pgdir_walk(uint64_t *pgdir, const void *va, int64_t alloc)
  * Hint: call pgdir_walk to get the corresponding page table entry
  */
 
-int
+static int
 map_region(uint64_t *pgdir, void *va, uint64_t size, uint64_t pa, int64_t perm)
 {
     /* TODO: Your code here. */
-    uint64_t va_start = ROUNDDOWN((char *)va,PGSIZE);
-    uint64_t va_end = ROUNDDOWN((char *)va + size - 1,PGSIZE);
-    uint64_t pa_start = ROUNDDOWN(pa,PGSIZE);
-    uint64_t *pte;
-    for(;;){
-        if( (pte = pgdir_walk(pgdir, (void *)va_start, 1)) == 0 )
-            return -1;
-        if( *pte & PTE_P )
-            panic("remap");
-        *pte = pa_start | perm | PTE_P | PTE_TABLE | PTE_AF;
-        if(va_start == va_end)
-            break;
-        va_start += PGSIZE;
-        pa_start += PGSIZE;
+    char* startp = ROUNDDOWN(va, PGSIZE);
+    char* endp = ROUNDDOWN(va + size - 1, PGSIZE);
+    for(char* i = startp; i <= endp; i += PGSIZE, pa += PGSIZE) {
+        uint64_t *pte = pgdir_walk(pgdir, i, 1);
+        *pte = pa | perm | PTE_P | PTE_TABLE | (MT_NORMAL << 2) | PTE_AF | PTE_SH;
     }
     return 0;
+    /* My code ends */
 }
-#define PTE_P        (1<<0)      /* valid */
-#define PTE_BLOCK    (0<<1)
-#define PTE_PAGE     (1<<1)
-#define PTE_TABLE    (1<<1)      /* entry gives address of the next level of translation table */
-#define PTE_KERNEL   (0<<6)      /* privileged, supervisor EL1 access only */
-#define PTE_USER     (1<<6)      /* unprivileged, EL0 access allowed */
-#define PTE_RW       (0<<7)      /* read-write */
-#define PTE_RO       (1<<7)      /* read-only */
-#define PTE_SH       (3<<8)      /* Shareability */
-#define PTE_AF       (1<<10)     /* P2066 access flags */
 
 /* 
  * Free a page table.
@@ -95,15 +77,27 @@ map_region(uint64_t *pgdir, void *va, uint64_t size, uint64_t pa, int64_t perm)
 void
 vm_free(uint64_t *pgdir, int level)
 {
-    for(int i = 0; i < 512; i++){
-        uint64_t pte = pgdir[i];
-        if( pte & PTE_P ){
-            uint64_t *child = (uint64_t *) P2V(PTE_ADDR(pte));
-            vm_free(child,level+1);
+    /* TODO: Your code here. */
+    if(pgdir == 0) panic("pgdir not found");
+    if(level < 3) {
+        for(int i = 0; i < (PGSIZE >> 3); i++) {
+            uint64_t *pte = &pgdir[i];
+            if(*pte & PTE_P) {
+                vm_free(P2V(PTE_ADDR(*pte)), level + 1);
+            }
+        }
+    }
+    else {
+        for(int i = 0; i < (PGSIZE >> 3); i++) {
+            uint64_t* pte = &pgdir[i];
+            if(*pte & PTE_P) {
+                //cprintf("%x\n", P2V(PTE_ADDR(*pte)));
+                kfree(P2V(PTE_ADDR(*pte))); // need to check valid
+            }
         }
     }
     kfree((char*)pgdir);
-    /* TODO: Your code here. */
+    /* My code ends */
 }
 
 /* Get a new page table */
@@ -112,8 +106,7 @@ pgdir_init()
 {
     /* TODO: Your code here. */
     uint64_t *pgdir;
-    
-    if ((pgdir = (uint64_t *) kalloc()) == 0)
+    if((pgdir = (uint64_t)kalloc()) == 0)
         return 0;
     memset(pgdir, 0, PGSIZE);
     return pgdir;
@@ -129,10 +122,10 @@ void
 uvm_init(uint64_t *pgdir, char *binary, int sz)
 {
     /* TODO: Your code here. */
-    if (sz >= PGSIZE){
-        panic("inituvm: more than a page");
-    }
-    char *mem = kalloc();
+    char *mem;
+    if(sz >= PGSIZE)
+        panic("uvm_init: size is larger than a page");
+    mem = kalloc();
     memset(mem, 0, PGSIZE);
     map_region(pgdir, 0, PGSIZE, V2P(mem), PTE_USER|PTE_RW|PTE_PAGE);
     memmove(mem, binary, sz);
@@ -141,21 +134,13 @@ uvm_init(uint64_t *pgdir, char *binary, int sz)
 /*
  * switch to the process's own page table for execution of it
  */
-static void flush_tlb (void)
-{
-    asm("TLBI VMALLE1" : : :);
-}
 void
 uvm_switch(struct proc *p)
 {
     /* TODO: Your code here. */
-    uint64_t val64;
-
-    if(p->pgdir == 0){
-        panic("switchuvm: no pgdir");
-    }
-    val64 = (uint64_t) V2P(p->pgdir) | 0x00;
-    asm("MSR TTBR0_EL1, %[v]": :[v]"r" (val64):);
-    // flush tlb
-    flush_tlb();
+    if(p == 0)
+        panic("uvm_switch: no proc");
+    if(p->pgdir == 0)
+        panic("uvm_switch: no pgdir in proc");
+    lttbr0(V2P(p->pgdir));
 }

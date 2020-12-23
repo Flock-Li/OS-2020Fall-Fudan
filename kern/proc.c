@@ -78,7 +78,7 @@ found:
     p->context = (struct context*)sp;
     memset(p->context, 0, sizeof(*(p->context)));
 
-    p->context->lr = (uint64_t)forkret + 8;
+    p->context->x30 = (uint64_t)forkret + 8;
 
     return p;
 }
@@ -123,10 +123,8 @@ user_init()
     uvm_init(p->pgdir, _binary_obj_user_initcode_start, (int)_binary_obj_user_initcode_size);
     p->sz = PGSIZE;
     memset(p->tf, 0, sizeof(*(p->tf)));
-    p->tf->SPSR = 0x00;
-    p->tf->SP = PGSIZE;
-    p->tf->r30 = 0;
-    p->tf->PC = 0;
+    p->tf->pc = 0;
+    p->tf->sp = PGSIZE;
 
     safestrcpy(p->name, "initcode", sizeof(p->name));
     p->state = RUNNABLE;
@@ -177,14 +175,6 @@ scheduler()
 /*
  * Enter scheduler.  Must hold only ptable.lock
  */
-int int_enabled ()
-{
-    uint32_t val;
-
-    asm("MRS %[v], DAIF": [v]"=r" (val)::);
-
-    return !(val & DIS_INT);
-}
 
 void
 sched()
@@ -200,8 +190,6 @@ sched()
     }
     if(p->state == RUNNING)
         panic("sched running");
-    if(int_enabled())
-        panic("sched interruptible");
 
     swtch(&p->context, c->scheduler);
 }

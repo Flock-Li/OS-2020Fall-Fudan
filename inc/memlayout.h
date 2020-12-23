@@ -2,7 +2,7 @@
 #define INC_MEMLAYOUT_H
 
 #define EXTMEM 0x80000                /* Start of extended memory */
-#define PHYSTOP 0x3F00000            /* Top physical memory */
+#define PHYSTOP 0x3F000000            /* Top physical memory */
 
 #define KERNBASE 0xFFFF000000000000   /* First kernel virtual address */
 #define KERNLINK (KERNBASE+EXTMEM)    /* Address where kernel is linked */

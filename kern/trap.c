@@ -39,12 +39,10 @@ trap(struct trapframe *tf)
             /* TODO: Your code here. */
             if(proc->killed)
                 exit();
-            return;
             proc->tf = tf;
             syscall();
             if(proc->killed)
                 exit();
-            return;
             break;
         default:
 bad:
